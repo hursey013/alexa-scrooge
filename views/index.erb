@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scrooge</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <div id="container">
+        <button id="link-btn">Link Account</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+    <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+    <script>
+    (function($) {
+        var handler = Plaid.create({
+            apiVersion: 'v2',
+            clientName: 'Plaid Walkthrough Demo',
+            env: 'development',
+            product: ['transactions'],
+            key: '<%= ENV["PLAID_PUBLIC_KEY"] %>',
+            onSuccess: function(public_token) {
+                $.post('/get_access_token', {public_token: public_token}, function() {
+                });
+            },
+        });
+
+        $('#link-btn').on('click', function(e) {
+          handler.open();
+        });
+    })(jQuery);
+    </script>
+</body>
+</html>
