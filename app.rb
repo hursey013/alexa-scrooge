@@ -1,8 +1,16 @@
 require 'date'
-require 'sinatra'
 require 'plaid'
+require 'sinatra'
+
 require './lib/alexa/request'
 require './lib/alexa/response'
+
+set :public_folder, File.dirname(__FILE__) + '/public'
+
+client = Plaid::Client.new(env: :development,
+                           client_id: ENV['PLAID_CLIENT_ID'],
+                           secret: ENV['PLAID_SECRET'],
+                           public_key: ENV['PLAID_PUBLIC_KEY'])
 
 ACCESS_TOKEN = ENV['CHASE_ACCESS_TOKEN']
 
@@ -17,15 +25,7 @@ post '/' do
   alexa_request = Alexa::Request.new(request)
 
   name = alexa_request.slot_value("Name")
-  month = alexa_request.slot_value("Date")
-
-  return Alexa::Response.build('Please specify a month, like How much does Drew owe for July?') unless month =~ /^(?:[1-9]\d{3}-(?:0[1-9]|1[0-2]))$/
-
-  start_date = Date.parse "#{month}-01"
-  end_date = Date.civil(start_date.year, start_date.month, -1)
-  
-  transactions = fetch_transactions(start_date, end_date)
-  total = transactions.sum {|t| t['amount'] }
+  total = fetch_transactions.sum {|t| t['amount'] }
   
   if name.nil? 
     message = "Collectively, you've spent $#{total.round(2)} from #{start_date} to #{end_date}"
@@ -44,7 +44,7 @@ post '/' do
 end
 
 post '/get_access_token' do
-  exchange_token_response = plaid_client.item.public_token.exchange(params['public_token'])
+  exchange_token_response = client.item.public_token.exchange(params['public_token'])
   access_token = exchange_token_response['access_token']
   item_id = exchange_token_response['item_id']
   puts "access token: #{access_token}"
@@ -54,20 +54,31 @@ end
 
 private
 
-def fetch_transactions(start_date, end_date)
-  transaction_response = plaid_client.transactions.get(ACCESS_TOKEN, start_date, end_date)
-  transactions = transaction_response['transactions']
+def fetch_transactions
+  today = Date.today
+
+  if today.day <= 15
+    start_date = Date.parse "#{today.year}-#{today.month}-01"
+    end_date = Date.parse "#{today.year}-#{today.month}-15"
+  else
+    start_date = Date.parse "#{today.year}-#{today.month}-15"
+    end_date = Date.civil(today.year, today.month, -1)  
+  end
+  
+  begin
+    transactions_response = client.transactions.get(ACCESS_TOKEN, start_date, end_date)
+  rescue Plaid::ItemError => e
+    return Alexa::Response.build(e.error_message)
+  end
+  
+  transactions = transaction_response['transactions']  
   
   while transactions.length < transaction_response['total_transactions']
-    transaction_response = plaid_client.transactions.get(ACCESS_TOKEN, start_date, end_date, offset: transactions.length)
+    transaction_response = client.transactions.get(ACCESS_TOKEN, start_date, end_date, offset: transactions.length)
     transactions += transaction_response['transactions']
   end
   
   transactions.reject do |t|
     (OMIT_CATEGORIES.include?(t['category'][0]) unless t['category'].to_a.empty?) || (OMIT_ACCOUNTS.include?(t['account_id']))
   end
-end
-
-def plaid_client
-  Plaid::Client.new(env: :development, client_id: ENV['PLAID_CLIENT_ID'], secret: ENV['PLAID_SECRET'], public_key: ENV['PLAID_PUBLIC_KEY'])
 end
