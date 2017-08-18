@@ -31,18 +31,17 @@ post '/' do
   end  
   
   total = fetch_transactions(start_date, end_date).sum {|t| t['amount'] }
-  
-  if name.nil?
-    message = "Collectively, you've spent $#{total.round(2)} from #{start_date} to #{end_date}"
-  else
-    message = "If specifying a person, use only Brian or Drew"
-    name = name.downcase
 
-    if name == 'brian'
-      message = "Brian, you owe $#{(total.to_f * 0.6).round(2)} for #{start_date} to #{end_date}"
-    elsif name == 'drew'
-      message = "Drew, you owe $#{(total.to_f * 0.4).round(2)} for #{start_date} to #{end_date}"
-    end
+  message = "Collectively, you've spent $#{total.round(2)} from #{start_date} to #{end_date}"
+  
+  return Alexa::Response.build(message) unless name.nil?
+
+  name = name.downcase
+
+  if name == 'brian'
+    message = "Brian, you owe $#{(total.to_f * 0.6).round(2)} for #{start_date} to #{end_date}"
+  elsif name == 'drew'
+    message = "Drew, you owe $#{(total.to_f * 0.4).round(2)} for #{start_date} to #{end_date}"
   end
   
   return Alexa::Response.build(message)
