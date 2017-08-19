@@ -9,10 +9,7 @@ set :public_folder, File.dirname(__FILE__) + '/public'
 
 OMIT_ACCOUNTS = [ '4V9AoqYZ35hX95eMbMmmFp0m74oDDESDo6O5j', 'Jej1pBwRnrcjaJJxjqB9tbxx6ewX1EuqQ3YJO' ].freeze
 OMIT_CATEGORIES = [ 'Transfer', 'Credit Card', 'Deposit', 'Payment' ].freeze
-ACCOUNTS = ENV['ACCESS_TOKENS'].split(' ')
-
-puts ACCOUNTS
-
+ACCOUNTS = ENV['ACCESS_TOKENS'].split(' ').freeze
 USERS = [ 
   { name: 'Brian', percentage: 0.6 },
   { name: 'Drew', percentage: 0.4 }
