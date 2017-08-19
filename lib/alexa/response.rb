@@ -10,7 +10,7 @@ module Alexa
       self[:response][:outputSpeech][:text] = response_text
     end
 
-    def self.build(response_text = "Hello World")
+    def self.build(response_text)
       new(response_text).to_json
     end
   end
