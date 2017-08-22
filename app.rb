@@ -1,6 +1,5 @@
 require 'date'
 require 'plaid'
-require 'pp'
 require 'sinatra'
 require './lib/alexa/request'
 require './lib/alexa/response'
@@ -10,10 +9,7 @@ set :public_folder, File.dirname(__FILE__) + '/public'
 OMIT_ACCOUNTS = [ '4V9AoqYZ35hX95eMbMmmFp0m74oDDESDo6O5j', 'Jej1pBwRnrcjaJJxjqB9tbxx6ewX1EuqQ3YJO' ].freeze
 OMIT_CATEGORIES = [ 'Transfer', 'Credit Card', 'Deposit', 'Payment' ].freeze
 ACCOUNTS = ENV['ACCESS_TOKENS'].split(' ').freeze
-USERS = [ 
-  { name: 'Brian', percentage: 0.6 },
-  { name: 'Drew', percentage: 0.4 }
-].freeze
+USERS = [ { name: 'Brian', percentage: 0.6 }, { name: 'Drew', percentage: 0.4 }].freeze
 
 get '/' do
   erb :index
@@ -25,7 +21,7 @@ post '/' do
   
   today = Date.today
 
-  if today.day <= 18
+  if today.day >= 3 && today.day <= 18
     start_date = Date.parse "#{today.year}-#{today.month}-01"
     end_date = Date.parse "#{today.year}-#{today.month}-15"
   else
