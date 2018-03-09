@@ -74,7 +74,9 @@ def fetch_transactions(start_date, end_date, account)
   rescue Plaid::ItemError => e
     return Alexa::Response.build(e.error_message)
   end
-
+  
+  puts transaction_response
+  
   transactions = transaction_response['transactions']  
   
   while transactions.length < transaction_response['total_transactions']
