@@ -85,6 +85,6 @@ def fetch_transactions(start_date, end_date, account)
   end
   
   transactions.reject do |t|
-    (OMIT_CATEGORIES.any?{|cat| t['category'].include?(cat)} unless t['category'].to_a.empty?) || (OMIT_ACCOUNTS.include?(t['account_id']))
+    ((OMIT_CATEGORIES & t['category']).any? unless t['category'].to_a.empty?) || (OMIT_ACCOUNTS.include?(t['account_id']))
   end
 end
